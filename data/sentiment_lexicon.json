@@ -1,0 +1,87 @@
+{
+  "positive": {
+    "rally": 2,
+    "surge": 2,
+    "rate cut": 3,
+    "cut rates": 3,
+    "fii buying": 2,
+    "record high": 2,
+    "upgrade": 1,
+    "inflow": 1,
+    "peace": 1,
+    "strong": 1,
+    "bull": 1,
+    "growth": 1,
+    "rebound": 1,
+    "optimistic": 1
+  },
+  "negative": {
+    "crash": 4,
+    "war": 4,
+    "rate hike": 3,
+    "hike": 2,
+    "fii selling": 2,
+    "default": 4,
+    "ban": 3,
+    "circuit": 4,
+    "selloff": 2,
+    "sell-off": 2,
+    "recession": 3,
+    "geopolit": 2,
+    "outflow": 2,
+    "weak": 1,
+    "bear": 1,
+    "slump": 2,
+    "tumble": 2,
+    "tension": 2,
+    "inflation shock": 2
+  },
+  "market_moving": [
+    "rate cut",
+    "rate hike",
+    "war",
+    "crash",
+    "ban",
+    "default",
+    "circuit"
+  ],
+  "tags": {
+    "RBI": [
+      "rbi",
+      "repo",
+      "mpc"
+    ],
+    "Fed": [
+      "fed",
+      "fomc",
+      "powell",
+      "federal reserve"
+    ],
+    "results": [
+      "results",
+      "earnings",
+      "profit"
+    ],
+    "geopolitics": [
+      "war",
+      "geopolit",
+      "missile",
+      "conflict"
+    ],
+    "FII/DII": [
+      "fii",
+      "dii",
+      "foreign fund"
+    ],
+    "crude": [
+      "crude",
+      "oil",
+      "brent",
+      "wti"
+    ],
+    "budget": [
+      "budget",
+      "fiscal"
+    ]
+  }
+}

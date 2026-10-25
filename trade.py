@@ -175,8 +175,8 @@ class App:
             except Exception:
                 LOG.exception("replay history fetch")
                 hist = load_history_cache(ticker)
-        self.history[ticker] = hist
         self.replay_full = session_slice(hist, day)
+        self.history[ticker] = hist[hist.index.date < day].copy() if hist is not None and not hist.empty else hist
         vix = load_history_cache(VIX_TICKER)
         if vix is None or vix.empty:
             try:
@@ -184,9 +184,12 @@ class App:
                 save_history_cache(VIX_TICKER, vix)
             except Exception:
                 vix = load_history_cache(VIX_TICKER)
-        self.history[VIX_TICKER] = vix
         self.replay_vix = session_slice(vix, day) if vix is not None else None
+        self.history[VIX_TICKER] = (
+            vix[vix.index.date < day].copy() if vix is not None and not vix.empty else vix
+        )
         self.sim_now = replay_clock_start(day)
+        self.last_wall = time.time()
         self.log_event(f"REPLAY {day.isoformat()} news disabled — no lookahead")
 
     def due(self, name: str, every: float) -> bool:
@@ -264,25 +267,36 @@ class App:
                 continue
             cached = load_history_cache(t)
             if cached is not None and not cached.empty and path_ok:
-                self.history[t] = cached
+                self.history[t] = self._history_before_replay(cached)
                 continue
             if self.replay_day is not None and cached is not None and not cached.empty:
-                self.history[t] = cached
+                self.history[t] = self._history_before_replay(cached)
                 continue
             try:
                 df = fetch_history_59d(t)
                 save_history_cache(t, df)
-                self.history[t] = df
+                self.history[t] = self._history_before_replay(df)
             except Exception:
                 LOG.exception("history %s", t)
                 if cached is not None and not cached.empty:
-                    self.history[t] = cached
+                    self.history[t] = self._history_before_replay(cached)
         self.mark_ran("history", True)
         try:
             ticker = INDEX_TICKERS[self.selected]
-            self.hist_stats = history_setup_stats(self.history.get(ticker), self.cfg, self.selected, self.now())
+            self.hist_stats = history_setup_stats(
+                self.history.get(ticker),
+                self.cfg,
+                self.selected,
+                self.now(),
+                use_cache=self.replay_day is None,
+            )
         except Exception:
             LOG.exception("history stats")
+
+    def _history_before_replay(self, history):
+        if self.replay_day is None or history is None or history.empty:
+            return history
+        return history[history.index.date < self.replay_day].copy()
 
     def session_df(self):
         ticker = INDEX_TICKERS[self.selected]
@@ -545,6 +559,9 @@ class App:
         except ValueError:
             self.log_event("need a number")
             return
+        if px <= 0:
+            self.log_event("premium must be positive")
+            return
         if mode == "premium" and self.plan:
             try:
                 t = years_to_expiry(self.now(), self.plan["expiry"])
@@ -574,7 +591,8 @@ class App:
                 self.log_event(f"live premium stored {px}")
         elif mode == "exit":
             if self.paper:
-                res = self.paper.close(float(self.session_df()["Close"].iloc[-1]), self.now(), f"manual_exit premium={px}")
+                spot = float(self.session_df()["Close"].iloc[-1])
+                res = self.paper.close(spot, self.now(), "manual_exit", exit_premium=px)
                 self.log_event(f"I EXITED net {res['net']:.0f}")
                 self.paper = None
             else:

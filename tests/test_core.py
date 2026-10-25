@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import math
+import time
 import unittest
 from datetime import date, datetime, time as dtime, timedelta
+from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
 import numpy as np
@@ -20,6 +22,8 @@ from core.options import (
 )
 from core.signals import detect_failed_breakout, detect_orb, detect_pullback
 from core.timemachine import monte_carlo, slice_no_lookahead, visible_bars
+from core.journal import PaperPosition
+from trade import App
 
 CFG = DEFAULT_CONFIG
 
@@ -232,6 +236,55 @@ class TestReplayNoLookahead(unittest.TestCase):
         sig2 = detect_orb(vis2, "BULLISH", CFG, True)
         self.assertEqual(sig1["state"], sig2["state"])
         self.assertEqual(sig1.get("entry"), sig2.get("entry"))
+
+    def test_starting_replay_resets_wall_clock(self):
+        app = App(CFG)
+        app.last_wall = time.time() - 3600
+        prior = _bars([100, 101, 102], start=datetime(2026, 10, 20, 9, 15, tzinfo=IST))
+        replay = _bars([103, 104, 105], start=datetime(2026, 10, 21, 9, 15, tzinfo=IST))
+        future = _bars([106, 107, 108], start=datetime(2026, 10, 22, 9, 15, tzinfo=IST))
+        history = pd.concat([prior, replay, future]).sort_index()
+        with patch("trade.load_history_cache", return_value=history):
+            app._load_replay(date(2026, 10, 21))
+        self.assertGreater(app.last_wall, time.time() - 5)
+        ticker = "^NSEI"
+        self.assertEqual(app.replay_full.index.date[0], date(2026, 10, 21))
+        self.assertTrue((app.history[ticker].index.date < date(2026, 10, 21)).all())
+
+
+class TestManualExit(unittest.TestCase):
+    def test_close_uses_entered_exit_premium(self):
+        position = PaperPosition(
+            index_name="NIFTY",
+            setup="ORB",
+            direction="long",
+            contract="NIFTY 24500 CE",
+            option_type="call",
+            strike=24500,
+            expiry=date(2026, 10, 27),
+            iv=0.15,
+            rate=0.065,
+            lot=65,
+            lots=1,
+            qty=65,
+            remaining_qty=65,
+            entry_time=datetime(2026, 10, 21, 10, 0, tzinfo=IST),
+            entry_index=24500,
+            entry_premium=100,
+            stop_index=24400,
+            target_index=24600,
+            partial_index=24550,
+            stop_premium=70,
+            target_premium=140,
+            exchange="NSE",
+            costs_cfg=CFG["costs"],
+            time_stop_minutes=40,
+        )
+        exit_time = datetime(2026, 10, 21, 10, 10, tzinfo=IST)
+        with patch("core.journal.append_row") as append_row:
+            result = position.close(24500, exit_time, "manual_exit", exit_premium=123.45)
+        self.assertAlmostEqual(result["exit_premium"], 123.45)
+        self.assertAlmostEqual(float(append_row.call_args.args[0]["exit_premium"]), 123.45)
 
 
 if __name__ == "__main__":

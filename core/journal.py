@@ -179,11 +179,23 @@ class PaperPosition:
         self.events.append(why)
         self.stop_premium = self.entry_premium
 
-    def close(self, index_level: float, now: datetime, reason: str) -> dict[str, Any]:
+    def close(
+        self,
+        index_level: float,
+        now: datetime,
+        reason: str,
+        exit_premium: float | None = None,
+    ) -> dict[str, Any]:
         from core.options import years_to_expiry
 
         t = years_to_expiry(now, self.expiry)
-        px = bs_price(index_level, float(self.strike), max(t, 1e-8), self.rate, self.iv, self.option_type)
+        px = (
+            float(exit_premium)
+            if exit_premium is not None
+            else bs_price(index_level, float(self.strike), max(t, 1e-8), self.rate, self.iv, self.option_type)
+        )
+        if px <= 0:
+            raise ValueError("exit premium must be positive")
         qty = self.remaining_qty
         gross = (px - self.entry_premium) * qty + self.realized_gross
         c = round_trip_costs(

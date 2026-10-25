@@ -1,0 +1,105 @@
+{
+  "capital": 20000.0,
+  "max_loss_pct_per_trade": 2000.0,
+  "daily_loss_limit": 2000.0,
+  "daily_profit_goal": 3000.0,
+  "max_trades_per_day": 2,
+  "r_multiple_target": 1.5,
+  "partial_at_R": 1.0,
+  "time_stop_minutes": 40,
+  "entry_window": [
+    "09:30",
+    "14:30"
+  ],
+  "hard_exit": "15:15",
+  "auto_journal_take": true,
+  "mc_paths": 10000,
+  "mc_seed": 42,
+  "risk_free": 0.065,
+  "_holidays_note": "Keep this list updated. If an expiry falls on a holiday, it shifts to the previous trading day.",
+  "holidays": [
+    "2026-10-20",
+    "2026-11-10",
+    "2026-11-24"
+  ],
+  "selected_index": "NIFTY",
+  "indices": {
+    "NIFTY": {
+      "ticker": "^NSEI",
+      "lot": 65,
+      "step": 50,
+      "expiry": "weekly_tuesday",
+      "exchange": "NSE",
+      "iv_scalar": 1.0
+    },
+    "BANKNIFTY": {
+      "ticker": "^NSEBANK",
+      "lot": 30,
+      "step": 100,
+      "expiry": "monthly_last_tuesday",
+      "exchange": "NSE",
+      "iv_scalar": 1.0
+    },
+    "SENSEX": {
+      "ticker": "^BSESN",
+      "lot": 20,
+      "step": 100,
+      "expiry": "weekly_thursday",
+      "exchange": "BSE",
+      "iv_scalar": 1.0
+    }
+  },
+  "costs": {
+    "brokerage_per_order": 20.0,
+    "stt_sell_premium_pct": 0.1,
+    "stt_changed_recently": true,
+    "exchange_txn_nse_pct": 0.03503,
+    "exchange_txn_bse_pct": 0.0325,
+    "sebi_fee_pct": 0.0001,
+    "stamp_duty_buy_pct": 0.003,
+    "gst_pct": 18.0,
+    "slippage_per_unit": 1.0
+  },
+  "orb": {
+    "min_range_pct": 0.15,
+    "max_range_pct": 0.8
+  },
+  "bias_weights": {
+    "us_futures": 15,
+    "asia": 10,
+    "crude": 8,
+    "usdinr": 8,
+    "dxy": 5,
+    "vix_level": 10,
+    "vix_change": 8,
+    "gap": 12,
+    "news": 12,
+    "intraday_trend": 12
+  },
+  "events": [
+    {
+      "date": "2026-10-28",
+      "name": "US CPI",
+      "kind": "US_CPI"
+    },
+    {
+      "date": "2026-10-29",
+      "name": "FOMC",
+      "kind": "US_FED"
+    },
+    {
+      "date": "2026-12-05",
+      "name": "RBI Policy",
+      "kind": "RBI"
+    }
+  ],
+  "news_queries": [
+    "Nifty",
+    "Sensex",
+    "Bank Nifty",
+    "RBI",
+    "Fed",
+    "FII",
+    "crude oil"
+  ]
+}

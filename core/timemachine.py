@@ -235,10 +235,11 @@ def history_setup_stats(
     cfg: dict[str, Any],
     index_name: str,
     now: datetime,
+    use_cache: bool = True,
 ) -> dict[str, Any]:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     key = f"{index_name}"
-    if HIST_STATS_PATH.exists():
+    if use_cache and HIST_STATS_PATH.exists():
         try:
             cached = json.loads(HIST_STATS_PATH.read_text(encoding="utf-8"))
             if cached.get("date") == now.astimezone(IST).date().isoformat() and key in cached.get("by_index", {}):
@@ -338,10 +339,11 @@ def history_setup_stats(
         "date": now.astimezone(IST).date().isoformat(),
         "by_index": {**cached.get("by_index", {}), key: {"setups": out, "n_days": n_days}},
     }
-    try:
-        HIST_STATS_PATH.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-    except OSError:
-        pass
+    if use_cache:
+        try:
+            HIST_STATS_PATH.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        except OSError:
+            pass
     return payload["by_index"][key]
 
 
