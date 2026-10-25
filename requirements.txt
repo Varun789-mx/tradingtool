@@ -1,0 +1,7 @@
+yfinance
+pandas
+numpy
+rich
+plotly
+feedparser
+tzdata
